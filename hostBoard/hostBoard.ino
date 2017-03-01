@@ -36,7 +36,7 @@ void loop()
       processData(address, Wire.read());    
     }
   }
-    delay(READ_DELAY);
+  delay(READ_DELAY);
 }
 
 void processData(int address, byte data) {
