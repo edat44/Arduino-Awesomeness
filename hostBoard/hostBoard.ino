@@ -1,8 +1,9 @@
+
 #include <Wire.h>
 
 #define DATA_SIZE 1 // how many bytes to expect from each I2C salve node
 #define CONTESTANTS 2 // maximum number of slave nodes (I2C addresses) to probe
-#define START_ADDRESS 2 // The starting I2C address of slave nodes
+#define START_ADDRESS 1 // The starting I2C address of slave nodes
 #define READ_DELAY 10 // Some delay between I2C node reads
 
 #define BUZZ_OFFSET 0
