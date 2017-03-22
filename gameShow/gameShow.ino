@@ -42,52 +42,58 @@ volatile int buzzedInPlayer; //Keep track of player that buzzed in for the last 
 int points[2]; //Keep track of points for both players
 
 /*BUZZER VARIABLES*/
-volatile unsigned long buzzLength = 0; //Length of time (in milliseconds) for buzzer to buzz
-volatile unsigned long buzzRepeat = 0;
-volatile unsigned long buzzDelay = 0;
-volatile unsigned long buzzTone = 0;
-volatile unsigned long buzzTimer = 0;
-/*END BUZZER VARIABLE*/
+volatile unsigned long buzzLength = 0;  //Length of time (in milliseconds) for buzzer to buzz
+volatile unsigned long buzzRepeat = 0;  //Number of times to repeat buzzer sound (0 for no repeat)
+volatile unsigned long buzzDelay = 0;   //Length of time (int millisecond) to delay between consecutive buzzes
+volatile unsigned long buzzTone = 0;    //Frequency for buzzer sound (in Hz)
+volatile unsigned long buzzTimer = 0;   //Current arduino time when buzzer is started
+/*END BUZZER VARIABLES*/
 
-unsigned long questionTimer = 0;
+unsigned long questionTimer = 0; //Current arduino time when question starts
 
-void setup()
-{
+/*--------------------------------------------------------------------------------------------------------------*/
+
+void setup() {
   Serial.begin(9600);
   Serial.println("Welcome to the show!");
 
-  // set up the LCD's number of columns and rows:
-
-  //Set up correct and wrong answer buttons
+  //SET UP HOST BUTTONS
   pinMode(CORRECT_ANSWER_BUTTON, INPUT);
   pinMode(WRONG_ANSWER_BUTTON, INPUT);
+  pinMode(START_BUTTON,OUTPUT);
 
+  //PLAYER BUZZ-IN BUTTONS
   pinMode(P1_BUTTON, INPUT);
   attachInterrupt(digitalPinToInterrupt(P1_BUTTON), playerOneAnswer, RISING);
   pinMode(P2_BUTTON, INPUT);
   attachInterrupt(digitalPinToInterrupt(P2_BUTTON), playerTwoAnswer, RISING);
-  
+
+  //PLAYER BUZZ INDICATORS
   pinMode(P1_BUZZ_LED,OUTPUT);
   pinMode(P2_BUZZ_LED,OUTPUT);
-  
+
+  //PLAYER SCORE LEDS
   pinMode(P1_SCORE_LEDS[0],OUTPUT);
   pinMode(P1_SCORE_LEDS[1],OUTPUT);
-
   pinMode(P2_SCORE_LEDS[0],OUTPUT);
   pinMode(P2_SCORE_LEDS[1],OUTPUT);
 
+  //BUZZER
   pinMode(BUZZER, OUTPUT);
-  pinMode(START_BUTTON,OUTPUT);
+
   
-  //Initialize points
+  //INITIALIZE POINTS
   for (int i = 0; i < PLAYERS; i++) {
     points[i] = 0;
   }
+  
+  //Initial pause before starting the loop
   delay(200);
-}
+} //END SETUP FUNCTION
 
-void loop()
-{
+/*--------------------------------------------------------------------------------------------------------------*/
+
+void loop() {
   bool correct = false, wrong = false, start = false, p1 = false, p2 = false;
   unsigned long newTime = 0, timeLeft = 0;
   switch(gameState) {
@@ -188,7 +194,9 @@ void loop()
     }
   }
   delay(DELAY);
-}
+} //END LOOP FUNCTION
+
+/*--------------------------------------------------------------------------------------------------------------*/
 
 void playerOneAnswer() {
   buzzIn(1);
