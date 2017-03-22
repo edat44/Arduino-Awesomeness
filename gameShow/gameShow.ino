@@ -7,11 +7,17 @@ enum GAME_STATE {
   awardPoints,
   gameOver
 };
-const int DELAY = 1000; //Delay in milliseconds between iteration of the main loop
+const int DELAY = 5; //Delay in milliseconds between iteration of the main loop
 const int PLAYERS = 2;
 
-const int PLAYER_ONE_PIN = 2;
-const int PLAYER_TWO_PIN = 3;
+const int P1_BUTTON = 2;
+const int P2_BUTTON = 3;
+
+const int P1_BUZZ_PIN = 4;
+const int P2_BUZZ_PIN = 7;
+
+const int P1_SCORE_PINS[] = {5, 6};
+const int P2_SCORE_PINTS[] = {8, 9};
 const int CORRECT_ANSWER_PIN = 4;
 const int WRONG_ANSWER_PIN = 5;
 const int POINT_VALUE_PIN = A0;
@@ -21,8 +27,6 @@ volatile GAME_STATE gameState = question;
 int buzzedInPlayer;
 int points[2];
 
-LiquidCrystal lcd(11, 12, 4, 5, 6, 7);
-
 
 void setup()
 {
@@ -30,7 +34,6 @@ void setup()
   Serial.println("Welcome to the show!");
 
   // set up the LCD's number of columns and rows:
-  lcd.begin(16, 2);
 
   //Set up correct and wrong answer buttons
   pinMode(CORRECT_ANSWER_PIN, INPUT);
@@ -45,16 +48,12 @@ void setup()
   for (int i = 0; i < PLAYERS; i++) {
     points[i] = 0;
   }
-  delay(1000);
 }
 
 void loop()
 {
-  lcd.clear();
   switch(gameState) {
     case question:
-      displayPoints();
-      gameState = answer;
       break;
     case answer:
       break;
@@ -70,20 +69,20 @@ void loop()
 }
 
 void playerOneAnswer() {
-  
+  buzzIn(1);
 }
 
 void playerTwoAnswer() {
-  
+  buzzIn(2);
 }
 
-void displayPoints() {
-  lcd.home();
-  lcd.clear();
-  for (int i = 0; i < PLAYERS; i++) {
-    lcd.setCursor(1, i);
-    Serial.println(points[i]);
-    lcd.print(5.0, 1);
+void buzzIn(int player) {
+  if (gameState == question) {
+    Serial.print("Player ");
+    Serial.print(player);
+    Serial.println(" buzzed in!");
+    gameState = answer;
+    buzzedPlayer = player;
   }
 }
 
