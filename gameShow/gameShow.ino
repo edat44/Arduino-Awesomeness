@@ -18,6 +18,7 @@ const int P2_BUZZ_PIN = 7;
 
 const int P1_SCORE_PINS[] = {5, 6};
 const int P2_SCORE_PINTS[] = {8, 9};
+
 const int CORRECT_ANSWER_PIN = 4;
 const int WRONG_ANSWER_PIN = 5;
 const int POINT_VALUE_PIN = A0;
@@ -39,10 +40,10 @@ void setup()
   pinMode(CORRECT_ANSWER_PIN, INPUT);
   pinMode(WRONG_ANSWER_PIN, INPUT);
 
-  pinMode(PLAYER_ONE_PIN, INPUT);
-  attachInterrupt(digitalPinToInterrupt(PLAYER_ONE_PIN), playerOneAnswer, RISING);
-  pinMode(PLAYER_TWO_PIN, INPUT);
-  attachInterrupt(digitalPinToInterrupt(PLAYER_TWO_PIN), playerTwoAnswer, RISING);
+  pinMode(P1_BUTTON, INPUT);
+  attachInterrupt(digitalPinToInterrupt(P1_BUTTON), playerOneAnswer, RISING);
+  pinMode(P2_BUTTON, INPUT);
+  attachInterrupt(digitalPinToInterrupt(P2_BUTTON), playerTwoAnswer, RISING);
 
   //Initialize points
   for (int i = 0; i < PLAYERS; i++) {
