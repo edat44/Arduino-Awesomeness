@@ -107,6 +107,9 @@ void loop()
         int pointValue = map(analogRead(POINT_VALUE_POT), 0, 1023, 1, 3);
         if (correct) {
           points[buzzedInPlayer - 1] += pointValue;
+          buzzLength = 500;
+          buzzTimer = millis();
+          buzzTone = 1600;
           Serial.print("Player ");
           Serial.print(buzzedInPlayer);
           Serial.println(" is correct!");
@@ -116,9 +119,9 @@ void loop()
         }
         else {
           points[buzzedInPlayer - 1] = max(points[buzzedInPlayer - 1] - pointValue, 0);
-          buzzLength = 250;
-          buzzDelay = 200;
-          buzzLength2 = 250;
+          buzzLength = 120;
+          buzzDelay = 100;
+          buzzLength2 = 120;
           buzzTimer = millis();
           buzzTone = 400;
           Serial.print("Player ");
@@ -179,7 +182,8 @@ void loop()
         buzzLength2 = 0;
         buzzTimer = millis();
       }
-      buzzTone = 0;
+      else
+        buzzTone = 0;
     }
   }
   delay(DELAY);
