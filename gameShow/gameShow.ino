@@ -11,6 +11,7 @@ enum GAME_STATE {
 const int DELAY = 5; //Delay in milliseconds between iteration of the main loop
 const int PLAYERS = 2;
 
+/*PIN CONSTANTS*/
 const int P1_BUTTON = 2;
 const int P2_BUTTON = 3;
 
@@ -25,12 +26,10 @@ const int SCORE_LEDS[2][2] = {
   {P2_SCORE_LEDS[0], P2_SCORE_LEDS[1]}
 };
 
-const int TIMER_RED_LED = 3;
-//const int TIMER_GREEN_LED = 11;
-
 const int CORRECT_ANSWER_BUTTON = 8;
 const int WRONG_ANSWER_BUTTON = 11;
 const int POINT_VALUE_POT = A0;
+/*END PIN CONSTANTS*/
 
 const int BUZZER = 12;
 const int START_BUTTON = 13;
