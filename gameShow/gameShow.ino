@@ -13,15 +13,17 @@ const int PLAYERS = 2;
 const int P1_BUTTON = 2;
 const int P2_BUTTON = 3;
 
-const int P1_BUZZ_PIN = 4;
-const int P2_BUZZ_PIN = 7;
+const int P1_BUZZ_LED = 4;
+const int P2_BUZZ_LED = 7;
 
-const int P1_SCORE_PINS[] = {5, 6};
-const int P2_SCORE_PINTS[] = {8, 9};
+const int P1_SCORE_LEDS[] = {5, 6};
+const int P2_SCORE_LEDS[] = {8, 9};
 
-const int CORRECT_ANSWER_PIN = 4;
-const int WRONG_ANSWER_PIN = 5;
-const int POINT_VALUE_PIN = A0;
+const int CORRECT_ANSWER_BUTTON = 10;
+const int WRONG_ANSWER_BUTTON = 11;
+const int POINT_VALUE_POT = A0;
+
+const int BUZZER = 12;
 
 //Variables to be changed in interrupts
 volatile GAME_STATE gameState = question;
@@ -37,14 +39,25 @@ void setup()
   // set up the LCD's number of columns and rows:
 
   //Set up correct and wrong answer buttons
-  pinMode(CORRECT_ANSWER_PIN, INPUT);
-  pinMode(WRONG_ANSWER_PIN, INPUT);
+  pinMode(CORRECT_ANSWER_BUTTON, INPUT);
+  pinMode(WRONG_ANSWER_BUTTON, INPUT);
 
   pinMode(P1_BUTTON, INPUT);
   attachInterrupt(digitalPinToInterrupt(P1_BUTTON), playerOneAnswer, RISING);
   pinMode(P2_BUTTON, INPUT);
   attachInterrupt(digitalPinToInterrupt(P2_BUTTON), playerTwoAnswer, RISING);
+  
+  pinMode(P1_BUZZ_LED,OUTPUT);
+  pinMode(P2_BUZZ_LED,OUTPUT);
+  
+  pinMode(P1_SCORE_LEDS[0],OUTPUT);
+  pinMode(P1_SCORE_LEDS[1],OUTPUT);
 
+  pinMode(P2_SCORE_LEDS[0],OUTPUT);
+  pinMode(P2_SCORE_LEDS[1],OUTPUT);
+
+  pinMode(BUZZER, OUTPUT);
+  
   //Initialize points
   for (int i = 0; i < PLAYERS; i++) {
     points[i] = 0;
@@ -53,6 +66,19 @@ void setup()
 
 void loop()
 {
+  /*
+  digitalWrite(P1_BUZZ_LED,HIGH);
+  digitalWrite(P2_BUZZ_LED,HIGH);
+
+  digitalWrite(P1_SCORE_LEDS[0],HIGH);
+  digitalWrite(P1_SCORE_LEDS[1],HIGH);
+
+  digitalWrite(P2_SCORE_LEDS[0],HIGH);
+  digitalWrite(P2_SCORE_LEDS[1],HIGH);
+
+  tone(BUZZER,1000);
+  */
+  
   switch(gameState) {
     case question:
       break;
@@ -83,7 +109,7 @@ void buzzIn(int player) {
     Serial.print(player);
     Serial.println(" buzzed in!");
     gameState = answer;
-    buzzedPlayer = player;
+    buzzedInPlayer = player;
   }
 }
 
