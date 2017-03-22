@@ -18,16 +18,19 @@ const int P1_BUZZ_LED = 4;
 const int P2_BUZZ_LED = 7;
 
 const int P1_SCORE_LEDS[] = {5, 6};
-const int P2_SCORE_LEDS[] = {8, 9};
+const int P2_SCORE_LEDS[] = {9, 10};
 
-const int CORRECT_ANSWER_BUTTON = 10;
+const int TIMER_RED_LED = 3;
+//const int TIMER_GREEN_LED = 11;
+
+const int CORRECT_ANSWER_BUTTON = 8;
 const int WRONG_ANSWER_BUTTON = 11;
 const int POINT_VALUE_POT = A0;
 
 const int BUZZER = 12;
 const int START_BUTTON = 13;
 
-const int BUZZ_TIME = 1500;
+const int BUZZ_TIME = 750;
 const int QUESTION_TIME = 5000;
 
 //Variables to be changed in interrupts
@@ -87,13 +90,12 @@ void loop()
 
   tone(BUZZER,1000);
   */
-  bool correct = false, wrong = false, start = false;
+  bool correct = false, wrong = false, start = false, p1 = false, p2 = false;
   unsigned long newTime = 0, timeLeft = 0;
   switch(gameState) {
     case question:
       newTime = millis();
-      timeLeft = questionTimer + QUESTION_TIME - newTime;
-      if (timeLeft <= 0) {
+      if (newTime >= questionTimer + QUESTION_TIME) {
         tone(BUZZER, 1000);
         gameState = pause;
         buzzTimer = millis();
