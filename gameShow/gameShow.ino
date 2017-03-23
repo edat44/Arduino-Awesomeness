@@ -9,6 +9,11 @@ enum GAME_STATE {
 };
 volatile GAME_STATE gameState = pause; //Start off in the pause state
 
+enum PLAYER {
+  playerOne = 0,
+  playerTwo = 1
+};
+
 const int DELAY = 5; //Delay in milliseconds between iteration of the main loop
 const int PLAYERS = 2; //Number of contestants playing
 
@@ -41,7 +46,7 @@ const int POINT_TARGET = 6; //Number of points to reach to win
 const int POINTS_PER_LED = POINT_TARGET / 2; //number of points show by a full brightness score LED
 const int MAX_POINT_VALUE = 3;
 
-volatile int buzzedInPlayer; //Keep track of player that buzzed in for the last question 
+volatile PLAYER buzzedInPlayer; //Keep track of player that buzzed in for the last question 
 int points[2]; //Keep track of points for both players
 
 
@@ -128,14 +133,14 @@ void loop() {
 /*--------------------------------------------------------------------------------------------------------------*/
 /*INTERRUPT FUNCTIONS*/
 void playerOneAnswer() {
-  buzzIn(1);
+  buzzIn(PLAYER::playerOne);
 }
 
 void playerTwoAnswer() {
-  buzzIn(2);
+  buzzIn(PLAYER::playerTwo);
 }
 
-void buzzIn(int player) {
+void buzzIn(PLAYER player) {
   if (gameState == question) {
     buzzTone = 800;
     buzzLength = 750;
@@ -146,7 +151,7 @@ void buzzIn(int player) {
     gameState = answer;
     buzzedInPlayer = player;
     int led = 0;
-    if (player == 1) {
+    if (player == playerOne) {
       led = P1_BUZZ_LED;
     } else {
       led = P2_BUZZ_LED;
@@ -178,6 +183,19 @@ void buzzer() {
 
 /*--------------------------------------------------------------------------------------------------------------*/
 
+String getPlayerName(int player) {
+  switch(player) {
+    case PLAYER::playerOne:
+      return "Player 1";
+    case PLAYER::playerTwo:
+      return "Player 2";
+    default:
+      return "UNKNOWN PLAYER";
+  }
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
 void questionState() {
   unsigned long newTime = millis();
   if (newTime  - questionTimer >= QUESTION_TIME) {
@@ -197,36 +215,37 @@ void answerState() {
   bool wrong = digitalRead(WRONG_ANSWER_BUTTON);
   if (correct || wrong) {
     int pointValue = map(analogRead(POINT_VALUE_POT), 0, 1023, 1, MAX_POINT_VALUE);
+    String playerName = getPlayerName(buzzedInPlayer);
     if (correct) {
-      points[buzzedInPlayer - 1] += pointValue;
+      points[buzzedInPlayer] += pointValue;
       buzzLength = 500;
       buzzTone = 1600;
       buzzTimer = millis();
       Serial.print("Player ");
-      Serial.print(buzzedInPlayer);
+      Serial.print(playerName);
       Serial.println(" is correct!");
       Serial.print(" Plus ");
       Serial.print(pointValue);
       Serial.println(" points!");
-      if (points[buzzedInPlayer - 1] >= POINT_TARGET) {
+      if (points[buzzedInPlayer] >= POINT_TARGET) {
         Serial.print("Player ");
-        Serial.print(buzzedInPlayer);
+        Serial.print(playerName);
         Serial.print(" has won with ");
-        Serial.print(points[buzzedInPlayer - 1]);
+        Serial.print(points[buzzedInPlayer]);
         Serial.println(" points!");
         gameState = gameOver;
         return;
       }
     }
     else {
-      points[buzzedInPlayer - 1] = max(points[buzzedInPlayer - 1] - pointValue, 0);
+      points[buzzedInPlayer] = max(points[buzzedInPlayer] - pointValue, 0);
       buzzLength = 120;
       buzzRepeat = 1;
       buzzDelay = 100;
       buzzTone = 400;
       buzzTimer = millis();
       Serial.print("Player ");
-      Serial.print(buzzedInPlayer);
+      Serial.print(playerName);
       Serial.print(" is wrong!");
       Serial.print(" Minus ");
       Serial.print(pointValue);
@@ -235,7 +254,8 @@ void answerState() {
     //Lightup Player Point LEDS
     for (int i = 0; i < 2; i++) {
       Serial.print("Player ");
-      Serial.print(i + 1);
+      String tempPlayerName = getPlayerName(i);
+      Serial.print(tempPlayerName);
       Serial.print(" has ");
       Serial.print(points[i]);
       Serial.println(" points!");
