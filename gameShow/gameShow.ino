@@ -40,7 +40,8 @@ const int WRONG_ANSWER_BUTTON = 11;
 const int POINT_VALUE_POT = A0;
 
 const int BUZZER = 12;
-const int START_BUTTON = 13;
+const int START_BUTTON = A1; //Had to use analog input do to lack of digital pins available
+const int QUESTION_LED = 13;
 /*END PIN CONSTANTS*/
 
 const int QUESTION_TIME = 5000; //Length of time (in milliseconds) that contestants get to answer each question
@@ -73,7 +74,9 @@ void setup() {
   //SET UP HOST BUTTONS
   pinMode(CORRECT_ANSWER_BUTTON, INPUT);
   pinMode(WRONG_ANSWER_BUTTON, INPUT);
-  pinMode(START_BUTTON,OUTPUT);
+
+  //SET UP QUESTION LED
+  pinMode(QUESTION_LED, OUTPUT);
 
   //PLAYER BUZZ-IN BUTTONS
   pinMode(P1_BUTTON, INPUT);
@@ -111,6 +114,8 @@ void setup() {
  * Runs continuously while the arduino is powered on until a new program is loaded or the reset button is hit.
  * The gameState variable controls the overarching flow of the program.
  * Different code is run depending on the current state of the game. 
+ * For maximum modularization, each game state has its own independent function
+ * The buzzer is processed every iteration of the loop no matter the game state in order for it to be used without interrupting the flow of the program
  */
 void loop() {
   switch(gameState) {
@@ -201,6 +206,7 @@ String getPlayerName(int player) {
 /*--------------------------------------------------------------------------------------------------------------*/
 
 void questionState() {
+  digitalWrite(QUESTION_LED, HIGH);
   unsigned long newTime = millis();
   if (newTime  - questionTimer >= QUESTION_TIME) {
     gameState = pause;
@@ -214,6 +220,7 @@ void questionState() {
 /*--------------------------------------------------------------------------------------------------------------*/
 
 void answerState() {
+  digitalWrite(QUESTION_LED, LOW);
   questionTimer = 0;
   bool correct = digitalRead(CORRECT_ANSWER_BUTTON);
   bool wrong = digitalRead(WRONG_ANSWER_BUTTON);
@@ -287,7 +294,12 @@ void answerState() {
 /*--------------------------------------------------------------------------------------------------------------*/
 
 void pauseState() {
-  bool start = digitalRead(START_BUTTON);
+  digitalWrite(QUESTION_LED, LOW);
+  int value = analogRead(START_BUTTON);
+  bool start = value >= 500; //Read analog input as digital input
+  Serial.print(value);
+  Serial.print('\t');
+  Serial.println(start);
   if (start) {
     gameState = question;
     questionTimer = millis();
@@ -298,6 +310,7 @@ void pauseState() {
 /*--------------------------------------------------------------------------------------------------------------*/
 
 void gameOverState() {
+  digitalWrite(QUESTION_LED, LOW);
   if (winner != none && winnerTimer > 0 && millis() - 1000 >= winnerTimer) {
     digitalWrite(BUZZ_LEDS[winner], !digitalRead(BUZZ_LEDS[winner]));
     winnerTimer = millis();
