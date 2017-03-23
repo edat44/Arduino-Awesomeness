@@ -10,6 +10,7 @@ enum GAME_STATE {
 volatile GAME_STATE gameState = pause; //Start off in the pause state
 
 enum PLAYER {
+  none = -1,
   playerOne = 0,
   playerTwo = 1
 };
@@ -23,6 +24,7 @@ const int P2_BUTTON = 3;
 
 const int P1_BUZZ_LED = 4;
 const int P2_BUZZ_LED = 7;
+const int BUZZ_LEDS[] = {P1_BUZZ_LED, P2_BUZZ_LED};
 
 const int P1_SCORE_LEDS[] = {5, 6};
 const int P2_SCORE_LEDS[] = {9, 10};
@@ -46,7 +48,8 @@ const int POINT_TARGET = 6; //Number of points to reach to win
 const int POINTS_PER_LED = POINT_TARGET / 2; //number of points show by a full brightness score LED
 const int MAX_POINT_VALUE = 3;
 
-volatile PLAYER buzzedInPlayer; //Keep track of player that buzzed in for the last question 
+volatile PLAYER buzzedInPlayer = none; //Keep track of player that buzzed in for the last question
+PLAYER winner = none; 
 int points[2]; //Keep track of points for both players
 
 
@@ -59,6 +62,7 @@ volatile unsigned long buzzTimer = 0;   //Current arduino time when buzzer is st
 /*END BUZZER VARIABLES*/
 
 unsigned long questionTimer = 0; //Current arduino time when question starts
+unsigned long winnerTimer = 0; //Timer for flashing LED of winner
 
 /*--------------------------------------------------------------------------------------------------------------*/
 
@@ -233,15 +237,18 @@ void answerState() {
         Serial.print(" has won with ");
         Serial.print(points[buzzedInPlayer]);
         Serial.println(" points!");
+        winner = buzzedInPlayer;
+        winnerTimer = millis();
         gameState = gameOver;
-        return;
       }
+      else
+        gameState = pause;
     }
     else {
       points[buzzedInPlayer] = max(points[buzzedInPlayer] - pointValue, 0);
       buzzLength = 120;
       buzzRepeat = 1;
-      buzzDelay = 100;
+      buzzDelay = 70;
       buzzTone = 400;
       buzzTimer = millis();
       Serial.print("Player ");
@@ -250,6 +257,8 @@ void answerState() {
       Serial.print(" Minus ");
       Serial.print(pointValue);
       Serial.println(" points!");
+      gameState = question;
+      questionTimer = millis();
     }
     //Lightup Player Point LEDS
     for (int i = 0; i < 2; i++) {
@@ -272,7 +281,6 @@ void answerState() {
     }
     digitalWrite(P1_BUZZ_LED, LOW);
     digitalWrite(P2_BUZZ_LED, LOW);
-    gameState = pause;
   }
 }
 
@@ -290,11 +298,9 @@ void pauseState() {
 /*--------------------------------------------------------------------------------------------------------------*/
 
 void gameOverState() {
-  delay(1000);
-  digitalWrite(P1_BUZZ_LED, HIGH);
-  digitalWrite(P2_BUZZ_LED, HIGH);
-  delay(1000);
-  digitalWrite(P1_BUZZ_LED, LOW);
-  digitalWrite(P2_BUZZ_LED, LOW);
+  if (winner != none && winnerTimer > 0 && millis() - 1000 >= winnerTimer) {
+    digitalWrite(BUZZ_LEDS[winner], !digitalRead(BUZZ_LEDS[winner]));
+    winnerTimer = millis();
+  }
 }
 
