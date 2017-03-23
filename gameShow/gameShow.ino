@@ -37,9 +37,12 @@ const int START_BUTTON = 13;
 /*END PIN CONSTANTS*/
 
 const int QUESTION_TIME = 5000; //Length of time (in milliseconds) that contestants get to answer each question
+const int POINT_TARGET = 6; //Number of points to reach to win
+const int POINTS_PER_LED = POINT_TARGET / 2); //number of points show by a full brightness score LED
 
 volatile int buzzedInPlayer; //Keep track of player that buzzed in for the last question 
 int points[2]; //Keep track of points for both players
+
 
 /*BUZZER VARIABLES*/
 volatile unsigned long buzzLength = 0;  //Length of time (in milliseconds) for buzzer to buzz
@@ -89,10 +92,23 @@ void setup() {
   
   //Initial pause before starting the loop
   delay(200);
-} //END SETUP FUNCTION
+} //END setup FUNCTION
 
 /*--------------------------------------------------------------------------------------------------------------*/
 
+/*
+ * loop()
+ * Runs continuously while the arduino is powered on until a new program is loaded or the reset button is hit.
+ * The gameState variable controls the overarching flow of the program.
+ * Different section of code are run depending on the current state of the game.
+ * question:
+ * -
+ * answer:
+ * -
+ * pause:
+ * -
+ * 
+ */
 void loop() {
   bool correct = false, wrong = false, start = false, p1 = false, p2 = false;
   unsigned long newTime = 0, timeLeft = 0;
@@ -124,6 +140,15 @@ void loop() {
           Serial.print(" Plus ");
           Serial.print(pointValue);
           Serial.println(" points!");
+          if (points[buzzedInPlayer - 1] >= POINT_TARGET) {
+            Serial.print("Player ");
+            Serial.print(buzzedInPlayer);
+            Serial.print(" has won with ");
+            Serial.print(points[buzzedInPlayer - 1]);
+            Serial.println(" points!");
+            gameMode = gameOver;
+            break;
+          }
         }
         else {
           points[buzzedInPlayer - 1] = max(points[buzzedInPlayer - 1] - pointValue, 0);
@@ -147,11 +172,11 @@ void loop() {
           Serial.print(points[i]);
           Serial.println(" points!");
           int values[] = {0, 0};
-          if (points[i] <= 3) {
-            values[0] = map(points[i], 0, 3, 0, 255);
+          if (points[i] <= POINTS_PER_LED) {
+            values[0] = map(points[i], 0, POINTS_PER_LED, 0, 255);
           } else {
             values[0] = 255;
-            values[1] = map(points[i], 3, 6, 0, 255);
+            values[1] = map(points[i], POINTS_PER_LED3, POINTS_PER_LED*2, 0, 255);
           }
           for (int j = 0; j < 2; j++) {
             analogWrite(SCORE_LEDS[i][j], values[j]);
@@ -171,6 +196,12 @@ void loop() {
       }
       break;
     case gameOver:
+      delay(1000);
+      digitalWrite(P1_BUZZ_LED, HIGH);
+      digitalWrite(P2_BUZZ_LED, HIGH);
+      delay(1000);
+      digitalWrite(P1_BUZZ_LED, LOW);
+      digitalWrite(P2_BUZZ_LED, LOW);
       break;
     default:
       Serial.println("STATE NOT FOUND");
@@ -194,7 +225,7 @@ void loop() {
     }
   }
   delay(DELAY);
-} //END LOOP FUNCTION
+} //END loop FUNCTION
 
 /*--------------------------------------------------------------------------------------------------------------*/
 
@@ -224,5 +255,4 @@ void buzzIn(int player) {
     }
     digitalWrite(led, HIGH);
   }
-}
-
+} //END buzzIn FUNCTION
