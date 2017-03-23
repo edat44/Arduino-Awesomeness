@@ -38,7 +38,8 @@ const int START_BUTTON = 13;
 
 const int QUESTION_TIME = 5000; //Length of time (in milliseconds) that contestants get to answer each question
 const int POINT_TARGET = 6; //Number of points to reach to win
-const int POINTS_PER_LED = POINT_TARGET / 2); //number of points show by a full brightness score LED
+const int POINTS_PER_LED = POINT_TARGET / 2; //number of points show by a full brightness score LED
+const int MAX_POINT_VALUE = 3;
 
 volatile int buzzedInPlayer; //Keep track of player that buzzed in for the last question 
 int points[2]; //Keep track of points for both players
@@ -100,135 +101,32 @@ void setup() {
  * loop()
  * Runs continuously while the arduino is powered on until a new program is loaded or the reset button is hit.
  * The gameState variable controls the overarching flow of the program.
- * Different section of code are run depending on the current state of the game.
- * question:
- * -
- * answer:
- * -
- * pause:
- * -
- * 
+ * Different code is run depending on the current state of the game. 
  */
 void loop() {
-  bool correct = false, wrong = false, start = false, p1 = false, p2 = false;
-  unsigned long newTime = 0, timeLeft = 0;
   switch(gameState) {
     case question:
-      newTime = millis();
-      if (newTime >= questionTimer + QUESTION_TIME) {
-        gameState = pause;
-        buzzTone = 1000;
-        buzzLength = 750;
-        buzzTimer = millis();
-        Serial.println("Out of time!");
-      }
+      questionState();
       break;
     case answer:
-      questionTimer = 0;
-      correct = digitalRead(CORRECT_ANSWER_BUTTON);
-      wrong = digitalRead(WRONG_ANSWER_BUTTON);
-      if (correct || wrong) {
-        int pointValue = map(analogRead(POINT_VALUE_POT), 0, 1023, 1, 3);
-        if (correct) {
-          points[buzzedInPlayer - 1] += pointValue;
-          buzzLength = 500;
-          buzzTone = 1600;
-          buzzTimer = millis();
-          Serial.print("Player ");
-          Serial.print(buzzedInPlayer);
-          Serial.println(" is correct!");
-          Serial.print(" Plus ");
-          Serial.print(pointValue);
-          Serial.println(" points!");
-          if (points[buzzedInPlayer - 1] >= POINT_TARGET) {
-            Serial.print("Player ");
-            Serial.print(buzzedInPlayer);
-            Serial.print(" has won with ");
-            Serial.print(points[buzzedInPlayer - 1]);
-            Serial.println(" points!");
-            gameMode = gameOver;
-            break;
-          }
-        }
-        else {
-          points[buzzedInPlayer - 1] = max(points[buzzedInPlayer - 1] - pointValue, 0);
-          buzzLength = 120;
-          buzzRepeat = 1;
-          buzzDelay = 100;
-          buzzTone = 400;
-          buzzTimer = millis();
-          Serial.print("Player ");
-          Serial.print(buzzedInPlayer);
-          Serial.print(" is wrong!");
-          Serial.print(" Minus ");
-          Serial.print(pointValue);
-          Serial.println(" points!");
-        }
-        //Lightup Player Point LEDS
-        for (int i = 0; i < 2; i++) {
-          Serial.print("Player ");
-          Serial.print(i + 1);
-          Serial.print(" has ");
-          Serial.print(points[i]);
-          Serial.println(" points!");
-          int values[] = {0, 0};
-          if (points[i] <= POINTS_PER_LED) {
-            values[0] = map(points[i], 0, POINTS_PER_LED, 0, 255);
-          } else {
-            values[0] = 255;
-            values[1] = map(points[i], POINTS_PER_LED3, POINTS_PER_LED*2, 0, 255);
-          }
-          for (int j = 0; j < 2; j++) {
-            analogWrite(SCORE_LEDS[i][j], values[j]);
-          }
-        }
-        digitalWrite(P1_BUZZ_LED, LOW);
-        digitalWrite(P2_BUZZ_LED, LOW);
-        gameState = pause;
-      }
+      answerState();
       break;
     case pause:
-      start = digitalRead(START_BUTTON);
-      if (start) {
-        gameState = question;
-        questionTimer = millis();
-        Serial.println("Next question is starting");
-      }
+      pauseState();
       break;
     case gameOver:
-      delay(1000);
-      digitalWrite(P1_BUZZ_LED, HIGH);
-      digitalWrite(P2_BUZZ_LED, HIGH);
-      delay(1000);
-      digitalWrite(P1_BUZZ_LED, LOW);
-      digitalWrite(P2_BUZZ_LED, LOW);
+      gameOverState();
       break;
     default:
       Serial.println("STATE NOT FOUND");
       break;
   }
-  
-  if (buzzTone > 0) {
-    tone(BUZZER, buzzTone);
-  }
-  if (buzzTimer > 0) {
-    unsigned long newTime = millis();
-    if ((newTime - buzzTimer) >= buzzLength) {
-      noTone(BUZZER);
-      if (buzzRepeat > 0) {
-        delay(buzzDelay);
-        buzzRepeat--;
-        buzzTimer = millis();
-      }
-      else
-        buzzTone = 0;
-    }
-  }
+  buzzer();
   delay(DELAY);
 } //END loop FUNCTION
 
 /*--------------------------------------------------------------------------------------------------------------*/
-
+/*INTERRUPT FUNCTIONS*/
 void playerOneAnswer() {
   buzzIn(1);
 }
@@ -256,3 +154,127 @@ void buzzIn(int player) {
     digitalWrite(led, HIGH);
   }
 } //END buzzIn FUNCTION
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
+void buzzer() {
+  if (buzzTone > 0) {
+    tone(BUZZER, buzzTone);
+  }
+  if (buzzTimer > 0) {
+    unsigned long newTime = millis();
+    if ((newTime - buzzTimer) >= buzzLength) {
+      noTone(BUZZER);
+      if (buzzRepeat > 0) {
+        delay(buzzDelay);
+        buzzRepeat--;
+        buzzTimer = millis();
+      }
+      else
+        buzzTone = 0;
+    }
+  }
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
+void questionState() {
+  unsigned long newTime = millis();
+  if (newTime  - questionTimer >= QUESTION_TIME) {
+    gameState = pause;
+    buzzTone = 1000;
+    buzzLength = 750;
+    buzzTimer = millis();
+    Serial.println("Out of time!");
+  }
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
+void answerState() {
+  questionTimer = 0;
+  bool correct = digitalRead(CORRECT_ANSWER_BUTTON);
+  bool wrong = digitalRead(WRONG_ANSWER_BUTTON);
+  if (correct || wrong) {
+    int pointValue = map(analogRead(POINT_VALUE_POT), 0, 1023, 1, MAX_POINT_VALUE);
+    if (correct) {
+      points[buzzedInPlayer - 1] += pointValue;
+      buzzLength = 500;
+      buzzTone = 1600;
+      buzzTimer = millis();
+      Serial.print("Player ");
+      Serial.print(buzzedInPlayer);
+      Serial.println(" is correct!");
+      Serial.print(" Plus ");
+      Serial.print(pointValue);
+      Serial.println(" points!");
+      if (points[buzzedInPlayer - 1] >= POINT_TARGET) {
+        Serial.print("Player ");
+        Serial.print(buzzedInPlayer);
+        Serial.print(" has won with ");
+        Serial.print(points[buzzedInPlayer - 1]);
+        Serial.println(" points!");
+        gameState = gameOver;
+        return;
+      }
+    }
+    else {
+      points[buzzedInPlayer - 1] = max(points[buzzedInPlayer - 1] - pointValue, 0);
+      buzzLength = 120;
+      buzzRepeat = 1;
+      buzzDelay = 100;
+      buzzTone = 400;
+      buzzTimer = millis();
+      Serial.print("Player ");
+      Serial.print(buzzedInPlayer);
+      Serial.print(" is wrong!");
+      Serial.print(" Minus ");
+      Serial.print(pointValue);
+      Serial.println(" points!");
+    }
+    //Lightup Player Point LEDS
+    for (int i = 0; i < 2; i++) {
+      Serial.print("Player ");
+      Serial.print(i + 1);
+      Serial.print(" has ");
+      Serial.print(points[i]);
+      Serial.println(" points!");
+      int values[] = {0, 0};
+      if (points[i] <= POINTS_PER_LED) {
+        values[0] = map(points[i], 0, POINTS_PER_LED, 0, 255);
+      } else {
+        values[0] = 255;
+        values[1] = map(points[i], POINTS_PER_LED, POINTS_PER_LED*2, 0, 255);
+      }
+      for (int j = 0; j < 2; j++) {
+        analogWrite(SCORE_LEDS[i][j], values[j]);
+      }
+    }
+    digitalWrite(P1_BUZZ_LED, LOW);
+    digitalWrite(P2_BUZZ_LED, LOW);
+    gameState = pause;
+  }
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
+void pauseState() {
+  bool start = digitalRead(START_BUTTON);
+  if (start) {
+    gameState = question;
+    questionTimer = millis();
+    Serial.println("Next question is starting");
+  }
+}
+
+/*--------------------------------------------------------------------------------------------------------------*/
+
+void gameOverState() {
+  delay(1000);
+  digitalWrite(P1_BUZZ_LED, HIGH);
+  digitalWrite(P2_BUZZ_LED, HIGH);
+  delay(1000);
+  digitalWrite(P1_BUZZ_LED, LOW);
+  digitalWrite(P2_BUZZ_LED, LOW);
+}
+
