@@ -42,7 +42,7 @@ const int START_BUTTON = A1; //Had to use analog input do to lack of digital pin
 const int QUESTION_LED = 13;
 /*END PIN CONSTANTS*/
 
-const int QUESTION_TIME = 5000; //Length of time (in milliseconds) that contestants get to answer each question
+const int QUESTION_TIME = 8000; //Length of time (in milliseconds) that contestants get to answer each question
 const int POINT_TARGET = 6; //Number of points to reach to win
 const int POINTS_PER_LED = POINT_TARGET / 2; //number of points show by a full brightness score LED
 const int MAX_POINT_VALUE = 3;
