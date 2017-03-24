@@ -1,6 +1,4 @@
-#include <LiquidCrystal.h>
-
-//Overarching game structure
+//Holds overarching game structure
 enum GAME_STATE {
   question, //Waiting for contestant to buzz in (using interrupts)
   answer,   //Waiting for 'correct answer' or 'wrong answer' button to be pressed
@@ -165,7 +163,7 @@ void buzzIn(PLAYER player) {
     } else {
       led = P2_BUZZ_LED;
     }
-    digitalWrite(led, HIGH);
+    digitalWrite(led, HIGH); //Turn on correct player's Buzz Indicator LED
   }
 } //END buzzIn FUNCTION
 
@@ -198,6 +196,7 @@ String getPlayerName(int player) {
       return "Player 1";
     case PLAYER::playerTwo:
       return "Player 2";
+    case PLAYER::none:
     default:
       return "UNKNOWN PLAYER";
   }
@@ -254,7 +253,7 @@ void answerState() {
     else {
       points[buzzedInPlayer] = max(points[buzzedInPlayer] - pointValue, 0);
       buzzLength = 120;
-      buzzRepeat = 1;
+      buzzRepeat = 2;
       buzzDelay = 70;
       buzzTone = 400;
       buzzTimer = millis();
@@ -297,9 +296,6 @@ void pauseState() {
   digitalWrite(QUESTION_LED, LOW);
   int value = analogRead(START_BUTTON);
   bool start = value >= 500; //Read analog input as digital input
-  Serial.print(value);
-  Serial.print('\t');
-  Serial.println(start);
   if (start) {
     gameState = question;
     questionTimer = millis();
